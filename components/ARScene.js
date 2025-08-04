@@ -764,68 +764,41 @@
 import { useState, useEffect, useRef } from 'react'
 
 export default function SafariCameraFix() {
-  const [step, setStep] = useState(0)
-  const [stream, setStream] = useState(null)
-  const [error, setError] = useState(null)
-  const [videoPlaying, setVideoPlaying] = useState(false)
-  const videoRef = useRef(null)
+    const [step, setStep] = useState(0)
+    const [stream, setStream] = useState(null)
+    const [error, setError] = useState(null)
+    const [videoPlaying, setVideoPlaying] = useState(false)
+    const videoRef = useRef(null)
 
-  // Limpiar stream al desmontar
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop())
-      }
-    }
-  }, [stream])
-
-  const startCamera = async () => {
-    try {
-      setStep(1)
-      setError(null)
-
-      // Obtener stream de cámara
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      })
-
-      setStream(mediaStream)
-      setStep(2)
-
-      // Asignar stream al video
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        
-        // Safari iOS requiere interacción del usuario para reproducir
-        // No intentamos play() automático, esperamos clic del usuario
-        videoRef.current.onloadedmetadata = () => {
-          setStep(3) // Video listo para reproducir
+    // Limpiar stream al desmontar
+    useEffect(() => {
+        return () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop())
         }
-
-        // Detectar cuando el video realmente empiece a reproducirse
-        videoRef.current.onplaying = () => {
-          setVideoPlaying(true)
-          setStep(4) // Video reproduciéndose
         }
+    }, [stream])
 
-        videoRef.current.onpause = () => {
-          setVideoPlaying(false)
+    const startCamera = async () => {
+        try {
+            setStep(1);
+            const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+            setStream(mediaStream);
+
+            if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream;
+            // Esto dispara la reproducción en Safari:
+            await videoRef.current.play();
+            setVideoPlaying(true);
+            setStep(4);
+            }
+        } catch (err) {
+            // …
         }
-      }
-
-    } catch (err) {
-      console.error('Error:', err)
-      setError(err.message)
-      setStep(-1)
-    }
-  }
+    };
 
   const playVideo = async () => {
+    if (videoRef.current && stream) {
       try {
         // Reproducir con manejo especial para Safari
         const playPromise = videoRef.current.play()
@@ -837,6 +810,7 @@ export default function SafariCameraFix() {
         console.error('Error al reproducir:', playError)
         setError(`Error de reproducción: ${playError.message}`)
       }
+    }
   }
 
   const getStepInfo = () => {
@@ -874,6 +848,7 @@ export default function SafariCameraFix() {
           ref={videoRef}
           playsInline
           muted
+          autoPlay
           style={{
             position: 'absolute',
             top: 0,
