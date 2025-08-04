@@ -789,9 +789,25 @@ function DebugCamera({ onCameraReady }) {
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream
-        videoRef.current.onloadedmetadata = () => {
-          setStatus('Video listo')
-          onCameraReady?.(true)
+        
+        // Forzar la reproducción del video en móviles
+        videoRef.current.onloadedmetadata = async () => {
+          try {
+            setStatus('Iniciando reproducción...')
+            await videoRef.current.play()
+            setStatus('✅ Video reproduciendo')
+            onCameraReady?.(true)
+          } catch (playError) {
+            console.error('Error al reproducir video:', playError)
+            setStatus('❌ Error al reproducir video')
+            setError(`Error de reproducción: ${playError.message}`)
+          }
+        }
+        
+        // Manejar errores del video
+        videoRef.current.onerror = (e) => {
+          console.error('Error en el video:', e)
+          setError('Error en el elemento video')
         }
       }
     } catch (err) {
@@ -892,11 +908,13 @@ function DebugCamera({ onCameraReady }) {
         autoPlay
         playsInline
         muted
+        controls={false}
         style={{
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          transform: 'scaleX(-1)'
+          transform: 'scaleX(-1)',
+          backgroundColor: '#000'
         }}
       />
       
@@ -905,15 +923,57 @@ function DebugCamera({ onCameraReady }) {
         position: 'absolute',
         top: '20px',
         left: '20px',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
         color: 'white',
-        padding: '10px',
+        padding: '12px',
         borderRadius: '8px',
-        fontSize: '12px'
+        fontSize: '12px',
+        maxWidth: '200px'
       }}>
         <p>✅ Cámara activa</p>
         <p>📱 {status}</p>
+        <p style={{ fontSize: '10px', opacity: 0.7, marginTop: '5px' }}>
+          Video ready: {videoRef.current?.readyState || 'N/A'}
+        </p>
       </div>
+      
+      {/* Botón manual de play si el video no arranca */}
+      {stream && status.includes('iniciando') && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 100
+        }}>
+          <button
+            onClick={async () => {
+              if (videoRef.current) {
+                try {
+                  await videoRef.current.play()
+                  setStatus('✅ Video reproduciendo (manual)')
+                  onCameraReady?.(true)
+                } catch (e) {
+                  setError('No se pudo reproducir el video: ' + e.message)
+                }
+              }
+            }}
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              color: '#1e40af',
+              padding: '15px 25px',
+              border: 'none',
+              borderRadius: '25px',
+              fontSize: '16px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+            }}
+          >
+            ▶️ Reproducir Video
+          </button>
+        </div>
+      )}
     </div>
   )
 }
