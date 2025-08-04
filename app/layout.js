@@ -1,30 +1,25 @@
+// app/layout.js
+import { AuthProvider } from '@/contexts/AuthContext'
 import './globals.css'
-import { Inter } from 'next/font/google'
-import { MapPin, Plus } from 'lucide-react'
-
-const inter = Inter({ subsets: ['latin'] })
-
+import { headers } from "next/headers";
+import { MobileProvider } from '@/contexts/MobileContext';
+import { isMobileUserAgent } from "@/utils/isMobile";
 export const metadata = {
-  title: 'Memorium',
-  description: 'Descubre y comparte historias geolocalizadas de tu comunidad',
-  manifest: '/manifest.json',
-  themeColor: '#8b5cf6',
+  title: 'Memorium - Descubre historias cerca de ti',
+  description: 'Comparte y descubre memorias de lugares especiales',
 }
 
 export default function RootLayout({ children }) {
+   const userAgent = headers().get("user-agent") || "";
+  const isMobile = isMobileUserAgent(userAgent);
   return (
     <html lang="es">
-      <head>
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="theme-color" content="#8b5cf6" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Memoria Colectiva" />
-      </head>
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-          {children}
-        </div>
+      <body>
+        <AuthProvider>
+          <MobileProvider>
+            {children}
+          </MobileProvider>
+        </AuthProvider>
       </body>
     </html>
   )
