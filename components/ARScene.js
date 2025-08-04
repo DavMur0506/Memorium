@@ -826,7 +826,6 @@ export default function SafariCameraFix() {
   }
 
   const playVideo = async () => {
-    if (videoRef.current && stream) {
       try {
         // Reproducir con manejo especial para Safari
         const playPromise = videoRef.current.play()
@@ -838,7 +837,6 @@ export default function SafariCameraFix() {
         console.error('Error al reproducir:', playError)
         setError(`Error de reproducción: ${playError.message}`)
       }
-    }
   }
 
   const getStepInfo = () => {
