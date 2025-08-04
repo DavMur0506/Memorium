@@ -763,60 +763,14 @@
 
 import { useState, useEffect, useRef } from 'react'
 
-// Componente de cámara simplificado para debug
-function DebugCamera({ onCameraReady }) {
+export default function SafariCameraFix() {
+  const [step, setStep] = useState(0)
   const [stream, setStream] = useState(null)
   const [error, setError] = useState(null)
-  const [status, setStatus] = useState('Iniciando...')
+  const [videoPlaying, setVideoPlaying] = useState(false)
   const videoRef = useRef(null)
-  
-  const initCamera = async () => {
-    try {
-      setStatus('Solicitando permisos...')
-      
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 }
-        },
-        audio: false
-      })
-      
-      setStatus('Cámara obtenida, iniciando video...')
-      setStream(mediaStream)
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-        
-        // Forzar la reproducción del video en móviles
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            setStatus('Iniciando reproducción...')
-            await videoRef.current.play()
-            setStatus('✅ Video reproduciendo')
-            onCameraReady?.(true)
-          } catch (playError) {
-            console.error('Error al reproducir video:', playError)
-            setStatus('❌ Error al reproducir video')
-            setError(`Error de reproducción: ${playError.message}`)
-          }
-        }
-        
-        // Manejar errores del video
-        videoRef.current.onerror = (e) => {
-          console.error('Error en el video:', e)
-          setError('Error en el elemento video')
-        }
-      }
-    } catch (err) {
-      console.error('Error accessing camera:', err)
-      setError(`Error: ${err.name} - ${err.message}`)
-      setStatus('Error al acceder a la cámara')
-      onCameraReady?.(false)
-    }
-  }
-  
+
+  // Limpiar stream al desmontar
   useEffect(() => {
     return () => {
       if (stream) {
@@ -824,226 +778,257 @@ function DebugCamera({ onCameraReady }) {
       }
     }
   }, [stream])
-  
-  if (error) {
-    return (
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundColor: '#dc2626',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>❌ Error</h2>
-        <p style={{ marginBottom: '20px' }}>{error}</p>
-        <button
-          onClick={initCamera}
-          style={{
-            backgroundColor: 'white',
-            color: '#dc2626',
-            padding: '10px 20px',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '16px',
-            cursor: 'pointer'
-          }}
-        >
-          🔄 Intentar de nuevo
-        </button>
-      </div>
-    )
-  }
-  
-  if (!stream) {
-    return (
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        backgroundColor: '#1e40af',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '20px',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ fontSize: '24px', marginBottom: '20px' }}>📷 Debug AR</h2>
-        <p style={{ marginBottom: '20px' }}>Estado: {status}</p>
-        <button
-          onClick={initCamera}
-          style={{
-            backgroundColor: 'white',
-            color: '#1e40af',
-            padding: '15px 30px',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '18px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          🚀 Activar Cámara
-        </button>
+
+  const startCamera = async () => {
+    try {
+      setStep(1)
+      setError(null)
+
+      // Obtener stream de cámara
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { 
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
+      })
+
+      setStream(mediaStream)
+      setStep(2)
+
+      // Asignar stream al video
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
         
-        <div style={{ marginTop: '30px', fontSize: '14px', opacity: 0.8 }}>
-          <p>URL: {window.location.href}</p>
-          <p>HTTPS: {window.location.protocol === 'https:' ? '✅' : '❌'}</p>
-          <p>MediaDevices: {navigator.mediaDevices ? '✅' : '❌'}</p>
-        </div>
-      </div>
-    )
+        // Safari iOS requiere interacción del usuario para reproducir
+        // No intentamos play() automático, esperamos clic del usuario
+        videoRef.current.onloadedmetadata = () => {
+          setStep(3) // Video listo para reproducir
+        }
+
+        // Detectar cuando el video realmente empiece a reproducirse
+        videoRef.current.onplaying = () => {
+          setVideoPlaying(true)
+          setStep(4) // Video reproduciéndose
+        }
+
+        videoRef.current.onpause = () => {
+          setVideoPlaying(false)
+        }
+      }
+
+    } catch (err) {
+      console.error('Error:', err)
+      setError(err.message)
+      setStep(-1)
+    }
   }
-  
+
+  const playVideo = async () => {
+    if (videoRef.current && stream) {
+      try {
+        // Reproducir con manejo especial para Safari
+        const playPromise = videoRef.current.play()
+        
+        if (playPromise !== undefined) {
+          await playPromise
+        }
+      } catch (playError) {
+        console.error('Error al reproducir:', playError)
+        setError(`Error de reproducción: ${playError.message}`)
+      }
+    }
+  }
+
+  const getStepInfo = () => {
+    switch (step) {
+      case 0: return { bg: '#3b82f6', text: '📱 Presiona para activar cámara', desc: 'Safari requiere interacción del usuario' }
+      case 1: return { bg: '#f59e0b', text: '🔄 Solicitando cámara...', desc: 'Obteniendo permisos de cámara' }
+      case 2: return { bg: '#f59e0b', text: '📹 Cámara obtenida', desc: 'Configurando video...' }
+      case 3: return { bg: '#10b981', text: '▶️ Presiona para ver video', desc: 'Video listo, requiere reproducción manual' }
+      case 4: return { bg: '#059669', text: '🎉 ¡Cámara funcionando!', desc: 'AR listo para usar' }
+      case -1: return { bg: '#dc2626', text: '❌ Error', desc: error || 'Error desconocido' }
+      default: return { bg: '#6b7280', text: '❓ Estado desconocido', desc: '' }
+    }
+  }
+
+  const stepInfo = getStepInfo()
+
   return (
-    <div style={{ position: 'absolute', inset: 0 }}>
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        controls={false}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          transform: 'scaleX(-1)',
-          backgroundColor: '#000'
-        }}
-      />
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: stepInfo.bg,
+      color: 'white',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      fontFamily: 'Arial, sans-serif',
+      padding: '20px',
+      position: 'relative'
+    }}>
       
-      {/* Overlay de información */}
+      {/* Video (oculto hasta que esté reproduciéndose) */}
+      {stream && (
+        <video
+          ref={videoRef}
+          playsInline
+          muted
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scaleX(-1)',
+            display: videoPlaying ? 'block' : 'none'
+          }}
+        />
+      )}
+
+      {/* Overlay de controles */}
       <div style={{
-        position: 'absolute',
-        top: '20px',
-        left: '20px',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        color: 'white',
-        padding: '12px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        maxWidth: '200px'
+        position: 'relative',
+        zIndex: 10,
+        textAlign: 'center',
+        backgroundColor: videoPlaying ? 'rgba(0,0,0,0.5)' : 'transparent',
+        padding: '20px',
+        borderRadius: '15px'
       }}>
-        <p>✅ Cámara activa</p>
-        <p>📱 {status}</p>
-        <p style={{ fontSize: '10px', opacity: 0.7, marginTop: '5px' }}>
-          Video ready: {videoRef.current?.readyState || 'N/A'}
-        </p>
-      </div>
-      
-      {/* Botón manual de play si el video no arranca */}
-      {stream && status.includes('iniciando') && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 100
+        
+        <h1 style={{ 
+          fontSize: '36px', 
+          margin: '0 0 15px 0' 
         }}>
+          {stepInfo.text}
+        </h1>
+        
+        <p style={{ 
+          fontSize: '16px', 
+          margin: '0 0 25px 0',
+          opacity: 0.9 
+        }}>
+          {stepInfo.desc}
+        </p>
+
+        {/* Botón principal */}
+        {step === 0 && (
           <button
-            onClick={async () => {
-              if (videoRef.current) {
-                try {
-                  await videoRef.current.play()
-                  setStatus('✅ Video reproduciendo (manual)')
-                  onCameraReady?.(true)
-                } catch (e) {
-                  setError('No se pudo reproducir el video: ' + e.message)
-                }
-              }
-            }}
+            onClick={startCamera}
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              color: '#1e40af',
-              padding: '15px 25px',
+              backgroundColor: 'white',
+              color: stepInfo.bg,
+              padding: '15px 30px',
               border: 'none',
               borderRadius: '25px',
-              fontSize: '16px',
-              cursor: 'pointer',
+              fontSize: '18px',
               fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+            }}
+          >
+            🚀 Activar Cámara AR
+          </button>
+        )}
+
+        {step === 3 && (
+          <button
+            onClick={playVideo}
+            style={{
+              backgroundColor: 'white',
+              color: stepInfo.bg,
+              padding: '15px 30px',
+              border: 'none',
+              borderRadius: '25px',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
               boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
             }}
           >
             ▶️ Reproducir Video
           </button>
-        </div>
-      )}
-    </div>
-  )
-}
+        )}
 
-export default function DebugARScene() {
-  const [mounted, setMounted] = useState(false)
-  const [cameraReady, setCameraReady] = useState(false)
-  
-  useEffect(() => {
-    console.log('DebugARScene montándose...')
-    setMounted(true)
-  }, [])
-  
-  const handleCameraReady = (ready) => {
-    console.log('Cámara lista:', ready)
-    setCameraReady(ready)
-  }
-  
-  console.log('Renderizando DebugARScene, mounted:', mounted)
-  
-  if (!mounted) {
-    return (
-      <div style={{
-        width: '100%',
-        height: '100vh',
-        backgroundColor: '#10b981',
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '18px'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
-          <p>Iniciando Debug AR...</p>
+        {step === -1 && (
+          <button
+            onClick={() => {
+              setStep(0)
+              setError(null)
+              setStream(null)
+              setVideoPlaying(false)
+            }}
+            style={{
+              backgroundColor: 'white',
+              color: stepInfo.bg,
+              padding: '15px 30px',
+              border: 'none',
+              borderRadius: '25px',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Intentar de nuevo
+          </button>
+        )}
+
+        {/* Información de debug */}
+        <div style={{
+          marginTop: '20px',
+          padding: '10px',
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          borderRadius: '8px',
+          fontSize: '12px',
+          textAlign: 'left'
+        }}>
+          <p><strong>Debug Info:</strong></p>
+          <p>HTTPS: {window.location.protocol === 'https:' ? '✅' : '❌'}</p>
+          <p>Stream: {stream ? '✅' : '❌'}</p>
+          <p>Video Playing: {videoPlaying ? '✅' : '❌'}</p>
+          <p>Safari: {/Safari/.test(navigator.userAgent) ? '✅' : '❌'}</p>
         </div>
       </div>
-    )
-  }
-  
-  return (
-    <div style={{
-      width: '100%',
-      height: '100vh',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <DebugCamera onCameraReady={handleCameraReady} />
-      
-      {/* Botón de prueba flotante */}
-      {cameraReady && (
+
+      {/* Botón de captura cuando la cámara funciona */}
+      {videoPlaying && (
         <div style={{
           position: 'absolute',
           bottom: '30px',
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 100
+          zIndex: 20
         }}>
           <button
             onClick={() => {
-              alert('¡Cámara funcionando! 📷✨')
+              // Simular captura con flash
+              document.body.style.backgroundColor = 'white'
+              setTimeout(() => {
+                document.body.style.backgroundColor = ''
+              }, 100)
+              
+              // Vibrar si está disponible
+              if (navigator.vibrate) {
+                navigator.vibrate(50)
+              }
+              
+              alert('¡Foto capturada! 📸✨\n\nLa cámara AR está funcionando perfectamente.')
             }}
             style={{
-              width: '60px',
-              height: '60px',
+              width: '70px',
+              height: '70px',
               borderRadius: '50%',
               backgroundColor: 'white',
               border: '4px solid rgba(255,255,255,0.5)',
               fontSize: '24px',
               cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+              boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
             📷
