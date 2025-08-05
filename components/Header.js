@@ -2,7 +2,7 @@ import { useMobile } from '@/contexts/MobileContext'
 import { isMobile } from '@/lib/utils'
 import { Camera, MapPin, Plus } from 'lucide-react'
 import { useState } from 'react'
-function Header({ onCreateClick, onARClick, onSignOut,isAuthenticated,user}) {
+function Header({ onCreateClick, onARClick, onSignOut,isAuthenticated,user,setShowAuthModal}) {
   const { isMobile } = useMobile();
   const [showUserMenu, setShowUserMenu] = useState(false)
 
