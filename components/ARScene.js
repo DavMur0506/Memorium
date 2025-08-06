@@ -15,10 +15,10 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
   const [error, setError] = useState('')
 
   const categories = [
-    { value: 'RECOMENDACION', label: 'Recomendación', icon: '⭐', color: '#fbbf24' },
-    { value: 'ADVERTENCIA', label: 'Advertencia', icon: '⚠️', color: '#ef4444' },
-    { value: 'HISTORIA', label: 'Historia', icon: '📚', color: '#3b82f6' },
-    { value: 'CURIOSIDAD', label: 'Curiosidad', icon: '🔍', color: '#8b5cf6' }
+    { value: 'RECOMENDACION', label: 'Recomendación', icon: '⭐', color: '#60a5fa' }, // blue-400
+    { value: 'ADVERTENCIA', label: 'Advertencia', icon: '⚠️', color: '#f87171' }, // red-400
+    { value: 'HISTORIA', label: 'Historia', icon: '📚', color: '#34d399' }, // emerald-400
+    { value: 'CURIOSIDAD', label: 'Curiosidad', icon: '🔍', color: '#a78bfa' } // violet-400
   ]
 
   const handleSubmit = async (e) => {
@@ -107,13 +107,13 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
+      <div className="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto border border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-800">📍 Nueva Memoria AR</h2>
+          <h2 className="text-xl font-bold text-blue-300">📍 Nueva Memoria AR</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-slate-400 hover:text-slate-200 text-2xl"
             disabled={isSubmitting}
           >
             ×
@@ -121,14 +121,14 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded mb-4">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Título *
             </label>
             <input
@@ -136,14 +136,14 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
               value={formData.title}
               onChange={(e) => handleChange('title', e.target.value)}
               placeholder="Ej: Lugar increíble para fotos"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700 text-slate-200 placeholder-slate-400"
               maxLength={100}
               disabled={isSubmitting}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Categoría
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -156,10 +156,10 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
                   className={`p-3 rounded-lg border-2 transition-all text-sm font-medium ${
                     formData.category === category.value
                       ? 'border-current text-white'
-                      : 'border-gray-200 text-gray-700 hover:border-gray-300'
+                      : 'border-slate-600 text-slate-300 hover:border-slate-500 bg-slate-700'
                   }`}
                   style={{
-                    backgroundColor: formData.category === category.value ? category.color : 'white',
+                    backgroundColor: formData.category === category.value ? category.color : '',
                     borderColor: formData.category === category.value ? category.color : ''
                   }}
                 >
@@ -173,7 +173,7 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Descripción *
             </label>
             <textarea
@@ -181,14 +181,14 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Describe qué hace especial este lugar..."
               rows={4}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-slate-700 text-slate-200 placeholder-slate-400"
               maxLength={500}
               disabled={isSubmitting}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
               Dirección (opcional)
             </label>
             <input
@@ -196,14 +196,14 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
               value={formData.address}
               onChange={(e) => handleChange('address', e.target.value)}
               placeholder="Se detectará automáticamente"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-slate-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-700 text-slate-200 placeholder-slate-400"
               disabled={isSubmitting}
             />
           </div>
 
           {position && (
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="text-sm text-blue-800">
+            <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-700">
+              <div className="text-sm text-blue-300">
                 <strong>📍 Posición AR:</strong>
                 <div className="font-mono text-xs mt-1">
                   X: {position.x.toFixed(3)}, Y: {position.y.toFixed(3)}, Z: {position.z.toFixed(3)}
@@ -217,7 +217,7 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className="flex-1 px-4 py-3 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 disabled:opacity-50"
             >
               Cancelar
             </button>
@@ -491,10 +491,10 @@ export default function TrueARScene({ memories = [] }) {
     const group = new THREE.Group()
 
     const categoryInfo = {
-      'RECOMENDACION': { color: 0xfbbf24, icon: '⭐' },
-      'ADVERTENCIA': { color: 0xef4444, icon: '⚠️' },
-      'HISTORIA': { color: 0x3b82f6, icon: '📚' },
-      'CURIOSIDAD': { color: 0x8b5cf6, icon: '🔍' }
+      'RECOMENDACION': { color: 0x60a5fa, icon: '⭐' }, // blue-400
+      'ADVERTENCIA': { color: 0xf87171, icon: '⚠️' }, // red-400
+      'HISTORIA': { color: 0x34d399, icon: '📚' }, // emerald-400
+      'CURIOSIDAD': { color: 0xa78bfa, icon: '🔍' } // violet-400
     }
 
     const info = categoryInfo[memory.category] || categoryInfo['RECOMENDACION']
@@ -511,7 +511,7 @@ export default function TrueARScene({ memories = [] }) {
     group.add(panelMesh)
 
     const borderGeometry = new THREE.EdgesGeometry(panelGeometry)
-    const borderColor = memory.isNearbyMemory ? 0x00ffff : 0xffffff
+    const borderColor = memory.isNearbyMemory ? 0x0ea5e9 : 0x3b82f6 // sky-500 : blue-500
     const borderMaterial = new THREE.LineBasicMaterial({ color: borderColor })
     const borderMesh = new THREE.LineSegments(borderGeometry, borderMaterial)
     group.add(borderMesh)
@@ -529,9 +529,9 @@ export default function TrueARScene({ memories = [] }) {
       distanceCanvas.height = 64
       const distanceContext = distanceCanvas.getContext('2d')
       
-      distanceContext.fillStyle = 'rgba(0, 255, 255, 0.8)'
+      distanceContext.fillStyle = 'rgba(14, 165, 233, 0.9)' // sky-500 with opacity
       distanceContext.fillRect(0, 0, 256, 64)
-      distanceContext.fillStyle = '#000000'
+      distanceContext.fillStyle = '#ffffff'
       distanceContext.font = 'bold 24px Arial'
       distanceContext.textAlign = 'center'
       distanceContext.fillText(`${distance.toFixed(0)}m`, 128, 40)
@@ -850,7 +850,7 @@ export default function TrueARScene({ memories = [] }) {
   }
 
   return (
-    <div className="w-full h-full relative bg-gray-900 overflow-hidden">
+    <div className="w-full h-full relative bg-slate-900 overflow-hidden">
       {/* Canvas para escena 3D */}
       <canvas 
         ref={canvasRef}
@@ -860,17 +860,17 @@ export default function TrueARScene({ memories = [] }) {
       />
 
       {/* Panel de debug */}
-      <div className="absolute top-4 left-4 z-50 bg-black/90 backdrop-blur-sm text-white p-4 rounded-lg max-w-sm">
-        <h3 className="font-semibold mb-2">🔍 AR Memory Creator</h3>
+      <div className="absolute top-4 left-4 z-50 bg-slate-800/95 backdrop-blur-sm text-slate-200 p-4 rounded-lg max-w-sm border border-slate-700">
+        <h3 className="font-semibold mb-2 text-blue-300">🔍 AR Memory Creator</h3>
         <div className="space-y-2 text-sm">
           <p><strong>Status:</strong> {debugInfo}</p>
-          <p><strong>📍 Memorias creadas:</strong> {placedMemories.length}</p>
-          <p><strong>🌍 Memorias cercanas:</strong> {nearbyMemories.length}</p>
-          <p><strong>🎯 AR:</strong> {isARActive ? 'Activo' : 'Inactivo'}</p>
+          <p><strong className="text-green-400">📍 Memorias creadas:</strong> {placedMemories.length}</p>
+          <p><strong className="text-sky-400">🌍 Memorias cercanas:</strong> {nearbyMemories.length}</p>
+          <p><strong className="text-blue-400">🎯 AR:</strong> {isARActive ? 'Activo' : 'Inactivo'}</p>
           {loadingMemories && <p className="text-yellow-400"><strong>⏳ Cargando memorias...</strong></p>}
           {userLocation && (
-            <p className="text-green-400 text-xs">
-              📍 {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
+            <p className="text-emerald-400 text-xs">
+              {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
             </p>
           )}
           {error && <p className="text-red-400"><strong>⚠️ Error:</strong> {error}</p>}
@@ -879,7 +879,7 @@ export default function TrueARScene({ memories = [] }) {
         {isARActive && (
           <div className="mt-4 p-3 bg-green-600/20 rounded border border-green-500">
             <p className="text-green-300 text-sm">
-              <strong>✨ AR Activo</strong><br />
+              <strong>AR Activo</strong><br />
               Toca cualquier superficie para crear una memoria
             </p>
           </div>
@@ -888,16 +888,16 @@ export default function TrueARScene({ memories = [] }) {
         {!isARActive && !loadingMemories && nearbyMemories.length === 0 && (
           <div className="mt-4 p-3 bg-yellow-600/20 rounded border border-yellow-500">
             <p className="text-yellow-300 text-sm">
-              <strong>📍 Sin memorias cercanas</strong><br />
+              <strong>Sin memorias cercanas</strong><br />
               No hay memorias en tu área. ¡Crea la primera!
             </p>
           </div>
         )}
 
         {!isARActive && nearbyMemories.length > 0 && (
-          <div className="mt-4 p-3 bg-cyan-600/20 rounded border border-cyan-500">
-            <p className="text-cyan-300 text-sm">
-              <strong>🌍 Memorias encontradas</strong><br />
+          <div className="mt-4 p-3 bg-sky-600/20 rounded border border-sky-500">
+            <p className="text-sky-300 text-sm">
+              <strong>Memorias encontradas</strong><br />
               {nearbyMemories.length} memorias cercanas cargadas
             </p>
           </div>
@@ -906,27 +906,27 @@ export default function TrueARScene({ memories = [] }) {
 
       {/* Lista de memorias */}
       {(placedMemories.length > 0 || nearbyMemories.length > 0) && (
-        <div className="absolute bottom-4 right-4 z-50 bg-black/90 backdrop-blur-sm text-white p-4 rounded-lg max-w-xs">
-          <h4 className="font-semibold mb-2">📝 Memorias</h4>
+        <div className="absolute bottom-4 right-4 z-50 bg-slate-800/95 backdrop-blur-sm text-slate-200 p-4 rounded-lg max-w-xs border border-slate-700">
+          <h4 className="font-semibold mb-2 text-blue-300">📝 Memorias</h4>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             
             {/* Memorias cercanas */}
             {nearbyMemories.length > 0 && (
               <>
-                <div className="text-xs text-cyan-400 font-semibold mb-1">🌍 Cercanas ({nearbyMemories.length})</div>
+                <div className="text-xs text-sky-400 font-semibold mb-1">🌍 Cercanas ({nearbyMemories.length})</div>
                 {nearbyMemories.slice(0, 3).map((memory) => (
-                  <div key={memory.id} className="p-2 bg-gray-700 rounded text-xs border-l-2 border-cyan-400">
+                  <div key={memory.id} className="p-2 bg-slate-700 rounded text-xs border-l-2 border-sky-400">
                     <div className="flex items-center gap-2 mb-1">
                       <span>
                         {memory.category === 'RECOMENDACION' ? '⭐' :
                          memory.category === 'ADVERTENCIA' ? '⚠️' :
                          memory.category === 'HISTORIA' ? '📚' : '🔍'}
                       </span>
-                      <span className="font-medium">{memory.title}</span>
+                      <span className="font-medium text-slate-200">{memory.title}</span>
                     </div>
-                    <p className="text-gray-300 truncate">{memory.description}</p>
+                    <p className="text-slate-400 truncate">{memory.description}</p>
                     {userLocation && memory.latitude && memory.longitude && (
-                      <p className="text-xs text-cyan-300 mt-1">
+                      <p className="text-xs text-sky-300 mt-1">
                         {calculateDistance(
                           userLocation.latitude,
                           userLocation.longitude,
@@ -938,7 +938,7 @@ export default function TrueARScene({ memories = [] }) {
                   </div>
                 ))}
                 {nearbyMemories.length > 3 && (
-                  <div className="text-xs text-gray-400 text-center">
+                  <div className="text-xs text-slate-500 text-center">
                     +{nearbyMemories.length - 3} más...
                   </div>
                 )}
@@ -950,16 +950,16 @@ export default function TrueARScene({ memories = [] }) {
               <>
                 <div className="text-xs text-green-400 font-semibold mb-1 mt-3">✏️ Creadas ({placedMemories.length})</div>
                 {placedMemories.map((memory) => (
-                  <div key={memory.id} className="p-2 bg-gray-700 rounded text-xs border-l-2 border-green-400">
+                  <div key={memory.id} className="p-2 bg-slate-700 rounded text-xs border-l-2 border-green-400">
                     <div className="flex items-center gap-2 mb-1">
                       <span>
                         {memory.category === 'RECOMENDACION' ? '⭐' :
                          memory.category === 'ADVERTENCIA' ? '⚠️' :
                          memory.category === 'HISTORIA' ? '📚' : '🔍'}
                       </span>
-                      <span className="font-medium">{memory.title}</span>
+                      <span className="font-medium text-slate-200">{memory.title}</span>
                     </div>
-                    <p className="text-gray-300 truncate">{memory.description}</p>
+                    <p className="text-slate-400 truncate">{memory.description}</p>
                     <p className="text-xs text-blue-300 mt-1">
                       Pos: ({memory.arPosition.x.toFixed(1)}, {memory.arPosition.y.toFixed(1)}, {memory.arPosition.z.toFixed(1)})
                     </p>
@@ -973,10 +973,10 @@ export default function TrueARScene({ memories = [] }) {
             {nearbyMemories.length > 0 && (
               <button
                 onClick={loadNearbyMemories}
-                className="flex-1 px-3 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm"
+                className="flex-1 px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded text-sm"
                 disabled={loadingMemories}
               >
-                🔄 Actualizar
+                Actualizar
               </button>
             )}
             {placedMemories.length > 0 && (
@@ -984,13 +984,12 @@ export default function TrueARScene({ memories = [] }) {
                 onClick={clearMemories}
                 className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
               >
-                🗑️ Limpiar
+                Limpiar
               </button>
             )}
           </div>
         </div>
       )}
-      
       {/* Controles */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         {!isARActive ? (
@@ -1013,7 +1012,7 @@ export default function TrueARScene({ memories = [] }) {
               onClick={() => createMemoryAtPosition(0, 0.5, -2)}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-semibold"
             >
-              ✏️ Crear Memoria {isARSupported ? '(Demo)' : ''}
+              Crear Memoria {isARSupported ? '(Demo)' : ''}
             </button>
           </div>
         ) : (
@@ -1021,7 +1020,7 @@ export default function TrueARScene({ memories = [] }) {
             onClick={exitAR}
             className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold"
           >
-            🚪 Salir AR
+            Salir AR
           </button>
         )}
       </div>
@@ -1036,13 +1035,13 @@ export default function TrueARScene({ memories = [] }) {
       
       {/* Información de ayuda */}
       {!isARSupported && error && (
-        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-blue-900/90 text-white p-4 rounded-lg text-center max-w-md">
-          <h4 className="font-semibold mb-2">📱 Información AR</h4>
+        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-slate-800/95 text-slate-200 p-4 rounded-lg text-center max-w-md border border-slate-700">
+          <h4 className="font-semibold mb-2 text-blue-300">📱 Información AR</h4>
           <p className="text-sm mb-3">Para AR real necesitas un dispositivo compatible con ARCore (Android) o ARKit (iOS)</p>
-          <p className="text-xs text-blue-200">En modo demo: haz click en pantalla para crear memorias 3D</p>
+          <p className="text-xs text-slate-400">En modo demo: haz click en pantalla para crear memorias 3D</p>
           {nearbyMemories.length > 0 && (
-            <p className="text-xs text-cyan-200 mt-2">
-              ✨ Memorias cercanas cargadas automáticamente
+            <p className="text-xs text-sky-300 mt-2">
+              Memorias cercanas cargadas automáticamente
             </p>
           )}
         </div>

@@ -132,7 +132,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br ">
       {/* Header */}
       
       <Header onCreateClick={handleCreateClick} isAuthenticated={isAuthenticated} onARClick={handleARClick} user={user} setShowAuthModal={setShowAuthModal}></Header>

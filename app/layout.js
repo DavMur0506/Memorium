@@ -13,7 +13,7 @@ export default function RootLayout({ children }) {
    const userAgent = headers().get("user-agent") || "";
   const isMobile = isMobileUserAgent(userAgent);
   return (
-    <html lang="es">
+    <html lang="es" className='dark'>
       <body>
         <AuthProvider>
           <MobileProvider>
