@@ -15,10 +15,10 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
   const [error, setError] = useState('')
 
   const categories = [
-    { value: 'RECOMENDACION', label: 'Recomendación', icon: '⭐', color: '#60a5fa' }, // blue-400
-    { value: 'ADVERTENCIA', label: 'Advertencia', icon: '⚠️', color: '#f87171' }, // red-400
-    { value: 'HISTORIA', label: 'Historia', icon: '📚', color: '#34d399' }, // emerald-400
-    { value: 'CURIOSIDAD', label: 'Curiosidad', icon: '🔍', color: '#a78bfa' } // violet-400
+    { value: 'RECOMENDACION', label: 'Recomendación', color: '#60a5fa' }, // blue-400
+    { value: 'ADVERTENCIA', label: 'Advertencia', color: '#f87171' }, // red-400
+    { value: 'HISTORIA', label: 'Historia', color: '#34d399' }, // emerald-400
+    { value: 'CURIOSIDAD', label: 'Curiosidad', color: '#a78bfa' } // violet-400
   ]
 
   const handleSubmit = async (e) => {
@@ -33,27 +33,45 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
     setError('')
 
     try {
-      // Obtener ubicación
+      // Obtener ubicación NUEVA para cada memoria
       let locationData = { address: formData.address }
       
       if (navigator.geolocation) {
         try {
+          console.log('🔄 Obteniendo ubicación fresca para nueva memoria...')
           const geoPosition = await new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 5000,
-              enableHighAccuracy: true
+              timeout: 10000,
+              enableHighAccuracy: true,
+              maximumAge: 0 // IMPORTANTE: No usar caché, obtener ubicación fresca
             })
           })
           
           locationData.latitude = geoPosition.coords.latitude
           locationData.longitude = geoPosition.coords.longitude
           
+          console.log('📍 Nueva ubicación obtenida:', {
+            lat: locationData.latitude,
+            lng: locationData.longitude,
+            accuracy: geoPosition.coords.accuracy
+          })
+          
           if (!formData.address) {
             locationData.address = `${geoPosition.coords.latitude.toFixed(6)}, ${geoPosition.coords.longitude.toFixed(6)}`
           }
         } catch (geoError) {
-          console.log('Geolocation error:', geoError)
+          console.error('Error obteniendo ubicación fresca:', geoError)
+          // Como fallback, usar la ubicación del usuario si está disponible
+          if (userLocation) {
+            console.log('📍 Usando ubicación del usuario como fallback')
+            locationData.latitude = userLocation.latitude
+            locationData.longitude = userLocation.longitude
+          }
         }
+      } else if (userLocation) {
+        // Si no hay geolocalización, usar ubicación del usuario
+        locationData.latitude = userLocation.latitude
+        locationData.longitude = userLocation.longitude
       }
 
       // Crear memoria
@@ -64,7 +82,9 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
         address: locationData.address || 'Ubicación AR',
         latitude: locationData.latitude || null,
         longitude: locationData.longitude || null,
-        arPosition: position || { x: 0, y: 0, z: 0 },
+        arPosition: position && typeof position === 'object' && position.x !== undefined 
+          ? position 
+          : { x: 0, y: 0, z: 0 },
         created_at: new Date().toISOString(),
         author_name: 'Usuario AR',
         is_verified: false,
@@ -110,7 +130,7 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm">
       <div className="bg-slate-800 rounded-xl p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto border border-slate-700">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-blue-300">📍 Nueva Memoria AR</h2>
+          <h2 className="text-xl font-bold text-blue-300">Nueva Memoria AR</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-slate-200 text-2xl"
@@ -163,8 +183,7 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
                     borderColor: formData.category === category.value ? category.color : ''
                   }}
                 >
-                  <div className="flex items-center space-x-2">
-                    <span>{category.icon}</span>
+                  <div className="flex items-center justify-center">
                     <span>{category.label}</span>
                   </div>
                 </button>
@@ -201,10 +220,10 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
             />
           </div>
 
-          {position && (
+          {position && position.x !== undefined && position.y !== undefined && position.z !== undefined && (
             <div className="bg-blue-900/30 p-3 rounded-lg border border-blue-700">
               <div className="text-sm text-blue-300">
-                <strong>📍 Posición AR:</strong>
+                <strong>Posición AR:</strong>
                 <div className="font-mono text-xs mt-1">
                   X: {position.x.toFixed(3)}, Y: {position.y.toFixed(3)}, Z: {position.z.toFixed(3)}
                 </div>
@@ -226,7 +245,7 @@ function CreateMemoryModal({ isOpen, onClose, onCreateMemory, position }) {
               disabled={isSubmitting || !formData.title.trim() || !formData.description.trim()}
               className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
-              {isSubmitting ? '🔄 Creando...' : '💾 Crear Memoria'}
+              {isSubmitting ? 'Creando...' : 'Crear Memoria'}
             </button>
           </div>
         </form>
@@ -491,10 +510,10 @@ export default function TrueARScene({ memories = [] }) {
     const group = new THREE.Group()
 
     const categoryInfo = {
-      'RECOMENDACION': { color: 0x60a5fa, icon: '⭐' }, // blue-400
-      'ADVERTENCIA': { color: 0xf87171, icon: '⚠️' }, // red-400
-      'HISTORIA': { color: 0x34d399, icon: '📚' }, // emerald-400
-      'CURIOSIDAD': { color: 0xa78bfa, icon: '🔍' } // violet-400
+      'RECOMENDACION': { color: 0x60a5fa }, // blue-400
+      'ADVERTENCIA': { color: 0xf87171 }, // red-400
+      'HISTORIA': { color: 0x34d399 }, // emerald-400
+      'CURIOSIDAD': { color: 0xa78bfa } // violet-400
     }
 
     const info = categoryInfo[memory.category] || categoryInfo['RECOMENDACION']
@@ -813,10 +832,37 @@ export default function TrueARScene({ memories = [] }) {
     }
   }
 
-  // Funciones de UI
-  const createMemoryAtPosition = (x = 0, y = 0, z = -2) => {
-    const position = { x, y, z }
-    setPendingPosition(position)
+  // Crear memoria con ubicación específica del click
+  const createMemoryAtPosition = async (x = 0, y = 0, z = -2) => {
+    // Obtener ubicación fresca para esta memoria específica
+    let currentLocation = null
+    
+    try {
+      console.log('Obteniendo ubicación precisa para nueva memoria...')
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0 // Ubicación fresca, no caché
+        })
+      })
+      
+      currentLocation = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      }
+      
+      console.log('Ubicación precisa obtenida:', currentLocation)
+    } catch (error) {
+      console.warn('No se pudo obtener ubicación precisa, usando ubicación del usuario')
+      currentLocation = userLocation
+    }
+    
+    const arPosition = { x, y, z }
+    
+    // Asegurar que siempre tenemos una posición válida
+    setPendingPosition(arPosition)
     setShowCreateModal(true)
   }
 
@@ -850,7 +896,7 @@ export default function TrueARScene({ memories = [] }) {
   }
 
   return (
-    <div className="w-full h-full relative bg-slate-900 overflow-hidden">
+    <div className="w-full h-full relative bg-slate-900 dark:bg-slate-900 overflow-hidden">
       {/* Canvas para escena 3D */}
       <canvas 
         ref={canvasRef}
@@ -861,19 +907,19 @@ export default function TrueARScene({ memories = [] }) {
 
       {/* Panel de debug */}
       <div className="absolute top-4 left-4 z-50 bg-slate-800/95 backdrop-blur-sm text-slate-200 p-4 rounded-lg max-w-sm border border-slate-700">
-        <h3 className="font-semibold mb-2 text-blue-300">🔍 AR Memory Creator</h3>
+        <h3 className="font-semibold mb-2 text-blue-300">AR Memory Creator</h3>
         <div className="space-y-2 text-sm">
           <p><strong>Status:</strong> {debugInfo}</p>
-          <p><strong className="text-green-400">📍 Memorias creadas:</strong> {placedMemories.length}</p>
-          <p><strong className="text-sky-400">🌍 Memorias cercanas:</strong> {nearbyMemories.length}</p>
-          <p><strong className="text-blue-400">🎯 AR:</strong> {isARActive ? 'Activo' : 'Inactivo'}</p>
-          {loadingMemories && <p className="text-yellow-400"><strong>⏳ Cargando memorias...</strong></p>}
+          <p><strong className="text-green-400">Memorias creadas:</strong> {placedMemories.length}</p>
+          <p><strong className="text-sky-400">Memorias cercanas:</strong> {nearbyMemories.length}</p>
+          <p><strong className="text-blue-400">AR:</strong> {isARActive ? 'Activo' : 'Inactivo'}</p>
+          {loadingMemories && <p className="text-yellow-400"><strong>Cargando memorias...</strong></p>}
           {userLocation && (
             <p className="text-emerald-400 text-xs">
               {userLocation.latitude.toFixed(4)}, {userLocation.longitude.toFixed(4)}
             </p>
           )}
-          {error && <p className="text-red-400"><strong>⚠️ Error:</strong> {error}</p>}
+          {error && <p className="text-red-400"><strong>Error:</strong> {error}</p>}
         </div>
         
         {isARActive && (
@@ -907,21 +953,16 @@ export default function TrueARScene({ memories = [] }) {
       {/* Lista de memorias */}
       {(placedMemories.length > 0 || nearbyMemories.length > 0) && (
         <div className="absolute bottom-4 right-4 z-50 bg-slate-800/95 backdrop-blur-sm text-slate-200 p-4 rounded-lg max-w-xs border border-slate-700">
-          <h4 className="font-semibold mb-2 text-blue-300">📝 Memorias</h4>
+          <h4 className="font-semibold mb-2 text-blue-300">Memorias</h4>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             
             {/* Memorias cercanas */}
             {nearbyMemories.length > 0 && (
               <>
-                <div className="text-xs text-sky-400 font-semibold mb-1">🌍 Cercanas ({nearbyMemories.length})</div>
+                <div className="text-xs text-sky-400 font-semibold mb-1">Cercanas ({nearbyMemories.length})</div>
                 {nearbyMemories.slice(0, 3).map((memory) => (
                   <div key={memory.id} className="p-2 bg-slate-700 rounded text-xs border-l-2 border-sky-400">
                     <div className="flex items-center gap-2 mb-1">
-                      <span>
-                        {memory.category === 'RECOMENDACION' ? '⭐' :
-                         memory.category === 'ADVERTENCIA' ? '⚠️' :
-                         memory.category === 'HISTORIA' ? '📚' : '🔍'}
-                      </span>
                       <span className="font-medium text-slate-200">{memory.title}</span>
                     </div>
                     <p className="text-slate-400 truncate">{memory.description}</p>
@@ -948,15 +989,10 @@ export default function TrueARScene({ memories = [] }) {
             {/* Memorias creadas */}
             {placedMemories.length > 0 && (
               <>
-                <div className="text-xs text-green-400 font-semibold mb-1 mt-3">✏️ Creadas ({placedMemories.length})</div>
+                <div className="text-xs text-green-400 font-semibold mb-1 mt-3">Creadas ({placedMemories.length})</div>
                 {placedMemories.map((memory) => (
                   <div key={memory.id} className="p-2 bg-slate-700 rounded text-xs border-l-2 border-green-400">
                     <div className="flex items-center gap-2 mb-1">
-                      <span>
-                        {memory.category === 'RECOMENDACION' ? '⭐' :
-                         memory.category === 'ADVERTENCIA' ? '⚠️' :
-                         memory.category === 'HISTORIA' ? '📚' : '🔍'}
-                      </span>
                       <span className="font-medium text-slate-200">{memory.title}</span>
                     </div>
                     <p className="text-slate-400 truncate">{memory.description}</p>
@@ -990,6 +1026,7 @@ export default function TrueARScene({ memories = [] }) {
           </div>
         </div>
       )}
+      
       {/* Controles */}
       <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         {!isARActive ? (
@@ -1004,7 +1041,7 @@ export default function TrueARScene({ memories = [] }) {
                     : 'bg-gray-600 cursor-not-allowed'
                 }`}
               >
-                {isSessionStarting ? '🔄 Iniciando...' : '🚀 Iniciar AR'}
+                {isSessionStarting ? 'Iniciando...' : 'Iniciar AR'}
               </button>
             )}
             
@@ -1036,7 +1073,7 @@ export default function TrueARScene({ memories = [] }) {
       {/* Información de ayuda */}
       {!isARSupported && error && (
         <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-slate-800/95 text-slate-200 p-4 rounded-lg text-center max-w-md border border-slate-700">
-          <h4 className="font-semibold mb-2 text-blue-300">📱 Información AR</h4>
+          <h4 className="font-semibold mb-2 text-blue-300">Información AR</h4>
           <p className="text-sm mb-3">Para AR real necesitas un dispositivo compatible con ARCore (Android) o ARKit (iOS)</p>
           <p className="text-xs text-slate-400">En modo demo: haz click en pantalla para crear memorias 3D</p>
           {nearbyMemories.length > 0 && (
